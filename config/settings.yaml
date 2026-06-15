@@ -1,0 +1,301 @@
+runtime:
+  days_back: 7
+  max_items_per_source: 4
+  max_steam_apps: 12
+  max_steam_priority_apps: 24
+  steam_news_per_app: 2
+  steam_detail_batch_size: 1
+  request_timeout_seconds: 20
+  connect_timeout_seconds: 12
+  read_timeout_seconds: 25
+  write_timeout_seconds: 10
+  pool_timeout_seconds: 10
+  retry_attempts: 2
+  max_connections: 8
+  max_keepalive_connections: 4
+  keepalive_expiry_seconds: 60
+  rss_concurrency: 4
+  user_agent: "horror-daily/0.1 (+PC horror game daily report)"
+  min_score_for_must_read: 70
+  suspicious_score_below: 35
+  min_review_count_for_released: 200
+  steam_country: CN
+  steam_language: english
+
+weights:
+  source_reliability: 1.0
+  freshness: 1.0
+  pc_relevance: 1.0
+  horror_relevance: 1.3
+  japanese_horror: 1.4
+  tracked_series: 1.5
+  event_importance: 1.2
+  priority: 1.0
+
+keywords:
+  horror:
+    - horror
+    - psychological horror
+    - survival horror
+    - japanese horror
+    - folk horror
+    - occult
+    - cosmic horror
+    - lovecraft
+    - cthulhu
+    - scp
+    - anomalous
+    - found footage
+    - liminal
+    - backrooms
+    - haunted
+    - ghost
+    - yurei
+    - yokai
+    - body horror
+    - analog horror
+    - walking simulator
+    - horror puzzle
+    - horror shooter
+    - co-op horror
+    - pixel horror
+    - retro horror
+  japanese_horror:
+    - japanese horror
+    - j-horror
+    - japan
+    - japanese
+    - yurei
+    - yokai
+    - onryo
+    - shrine
+    - village
+    - folklore
+    - folk horror
+    - chilla's art
+    - chillas art
+    - kowloon
+    - fatal frame
+    - project zero
+    - zero series
+    - 零系列
+    - 零 红蝶
+    - 红蝶
+  tracked_series:
+    - silent hill
+    - resident evil
+    - biohazard
+    - fatal frame
+    - project zero
+    - 零系列
+    - 零 红蝶
+    - crimson butterfly
+    - siren
+    - clock tower
+    - corpse party
+    - ib
+    - yume nikki
+  pc:
+    - pc
+    - windows
+    - steam
+    - epic games store
+    - gog
+    - itch.io
+  events:
+    release:
+      - released
+      - launches
+      - out now
+      - available now
+      - release date
+      - launches on
+    upcoming:
+      - announced
+      - reveal
+      - trailer
+      - coming soon
+      - release window
+    update:
+      - update
+      - patch
+      - major update
+      - roadmap
+    discount:
+      - sale
+      - discount
+      - deal
+      - historical low
+      - free weekend
+    demo:
+      - demo
+      - playtest
+      - next fest
+      - trial
+    dlc:
+      - dlc
+      - expansion
+      - downloadable content
+    early_access:
+      - early access
+      - version 1.0
+    review_trend:
+      - reviews
+      - user reviews
+      - review bomb
+      - overwhelmingly positive
+
+rss_sources:
+  - name: PC Gamer
+    url: https://www.pcgamer.com/rss/
+    reliability: 80
+    language: en
+    enabled: true
+  - name: Rock Paper Shotgun
+    url: https://www.rockpapershotgun.com/feed
+    reliability: 80
+    language: en
+    enabled: true
+  - name: Eurogamer
+    url: https://www.eurogamer.net/feed
+    reliability: 78
+    language: en
+    enabled: true
+  - name: Gematsu
+    url: https://www.gematsu.com/feed
+    reliability: 82
+    language: en
+    enabled: true
+  - name: Automaton
+    url: https://automaton-media.com/en/feed/
+    reliability: 82
+    language: en
+    enabled: true
+  - name: Famitsu
+    url: https://www.famitsu.com/rss/famitsu_all.rdf
+    reliability: 76
+    language: ja
+    enabled: false
+    note: "当前返回 404，保留为待修复候选源"
+  - name: 4Gamer
+    url: https://www.4gamer.net/rss/index.xml
+    reliability: 76
+    language: ja
+    enabled: true
+  - name: Dengeki Online
+    url: https://dengekionline.com/articles/feed/
+    reliability: 74
+    language: ja
+    enabled: false
+    note: "当前返回 404，保留为待修复候选源"
+  - name: DreadXP
+    url: https://dreadxp.com/feed/
+    reliability: 76
+    language: en
+    enabled: true
+  - name: Bloody Disgusting Games
+    url: https://bloody-disgusting.com/video-games/feed/
+    reliability: 74
+    language: en
+    enabled: true
+  - name: Rely on Horror
+    url: https://www.relyonhorror.com/feed/
+    reliability: 78
+    language: en
+    enabled: true
+  - name: Siliconera
+    url: https://www.siliconera.com/feed/
+    reliability: 74
+    language: en
+    enabled: true
+  - name: Noisy Pixel
+    url: https://noisypixel.net/feed/
+    reliability: 70
+    language: en
+    enabled: true
+  - name: GamesIndustry.biz
+    url: https://www.gamesindustry.biz/feed
+    reliability: 82
+    language: en
+    enabled: true
+  - name: IGN Games
+    url: https://www.ign.com/rss/articles/feed?tags=games
+    reliability: 78
+    language: en
+    enabled: true
+  - name: GameSpot News
+    url: https://www.gamespot.com/feeds/news/
+    reliability: 76
+    language: en
+    enabled: true
+  - name: Frictional Games
+    url: https://frictionalgames.com/feed/
+    reliability: 90
+    language: en
+    enabled: true
+  - name: Red Barrels
+    url: https://redbarrelsgames.com/feed/
+    reliability: 90
+    language: en
+    enabled: true
+
+steam_search_terms:
+  - horror
+  - psychological horror
+  - survival horror
+  - japanese horror
+  - folk horror
+  - SCP
+  - found footage
+
+steam_priority_search_terms:
+  - Fatal Frame
+  - Project Zero
+  - 零 红蝶
+  - Crimson Butterfly
+  - FATAL FRAME II
+  - Silent Hill
+  - Resident Evil
+  - Biohazard
+
+official_watch_sources:
+  - name: Epic Games Store
+    url: https://store.epicgames.com/
+    type: official_store
+    reliability: 95
+  - name: GOG News
+    url: https://www.gog.com/news
+    type: official_store
+    reliability: 94
+  - name: itch.io Horror Windows
+    url: https://itch.io/games/newest/tag-horror/platform-windows
+    type: official_store
+    reliability: 85
+  - name: Konami Games News
+    url: https://www.konami.com/games/us/en/topics/list/
+    type: publisher_official
+    reliability: 95
+  - name: Capcom News
+    url: https://www.capcom-games.com/en/news/
+    type: publisher_official
+    reliability: 95
+
+price_sources:
+  itad_country: CN
+  max_games_per_run: 12
+  authorized_itad_shops:
+    - Steam
+    - GOG
+    - Epic Games Store
+    - Humble Store
+    - Fanatical
+    - Green Man Gaming
+    - Gamesplanet
+    - GameBillet
+    - WinGameStore
+  risky_key_markets_disabled:
+    - G2A
+    - Kinguin
+    - Eneba
+    - CDKeys
+    - Gamivo

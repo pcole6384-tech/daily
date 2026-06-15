@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "horror-daily"
+version = "0.1.0"
+description = "PC horror game daily intelligence automation system"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "feedparser>=6.0.11",
+  "httpx>=0.27.0",
+  "jinja2>=3.1.4",
+  "markdown>=3.6",
+  "openai>=1.40.0",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "python-dotenv>=1.0.1",
+  "pyyaml>=6.0.2",
+  "tenacity>=8.5.0",
+  "tzdata>=2025.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3.0"]
+
+[project.scripts]
+horror-daily = "horror_daily.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+horror_daily = ["templates/*.j2"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

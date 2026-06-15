@@ -1,0 +1,8 @@
+services:
+  horror-daily:
+    build: .
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    command: ["python", "-m", "horror_daily"]

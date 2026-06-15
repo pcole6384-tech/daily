@@ -1,0 +1,64 @@
+# PC 恐怖游戏日报 - {{ report_date }}
+
+{% if item_count == 0 %}
+今天没有抓取到值得进入正式日报的高可信情报。系统仍完成了来源检查；失败来源见文末。
+{% endif %}
+
+{% for section in sections %}
+## {{ section }}
+
+{% set items = grouped.get(section, []) %}
+{% if items %}
+{% for item in items[:8] %}
+### {{ item.heading }}
+
+**一句话判断：** {{ item.judgment }}
+
+**发生了什么：** {{ item.what_happened }}
+
+**为什么重要：** {{ item.why_it_matters }}
+
+**我的建议：** {{ item.suggestion }}
+
+**风险提示：** {{ item.risk_note }}
+
+**来源：** {{ item.source }} · [原始链接]({{ item.url }})
+
+{% if item.game_title == "游戏名未可靠识别" %}
+**游戏名：** 游戏名未可靠识别
+{% else %}
+**游戏名：** {{ item.game_title }}{% if item.series %} · **系列：** {{ item.series }}{% endif %}
+{% endif %}
+
+{% if item.show_prices %}
+**国区价格：**
+{% if item.prices %}
+{% for price in item.prices %}
+- {{ price.store }}：{{ price.price }} · 折扣：{{ price.discount }} · 史低：{{ price.historical_low }}{% if price.url %} · [价格页]({{ price.url }}){% endif %}
+{% endfor %}
+{% else %}
+- 国区价格未获取
+{% endif %}
+{% endif %}
+
+{% endfor %}
+{% else %}
+暂无。
+{% endif %}
+{% endfor %}
+
+## 数据来源与可信度说明
+
+本日报优先使用 Steam 官方商店、Steam News、官方开发商/发行商信息与权威媒体 RSS。正文只展示阅读决策需要的信息；完整字段、评分、原始抓取结果与校验理由请查看 `debug_report.md` 或 `debug.json`。
+
+价格只展示中国区价格。没有明确 CN/CNY 价格时显示“国区价格未获取”，不会回退到美元或其他外区价格。CD key 搜索页不会进入正式日报；只有明确商品页、价格、DRM 和区域限制的授权零售商报价才允许展示。
+
+{% if failures %}
+### 本次抓取失败来源
+
+{% for failure in failures %}
+- {{ failure.source }}：{{ failure.error }}
+{% endfor %}
+{% else %}
+本次未记录来源抓取失败。
+{% endif %}

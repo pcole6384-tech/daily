@@ -1,0 +1,240 @@
+priority_search_terms:
+  tier_s:
+    - name: Silent Hill
+      aliases:
+        - Silent Hill
+        - SILENT HILL
+        - 寂静岭
+      weight: 100
+    - name: Resident Evil
+      aliases:
+        - Resident Evil
+        - Biohazard
+        - BIOHAZARD
+        - 生化危机
+        - Code Veronica
+        - "Code: Veronica"
+      weight: 100
+    - name: Fatal Frame
+      aliases:
+        - Fatal Frame
+        - Project Zero
+        - Zero Series
+        - 零系列
+        - 零 红蝶
+        - 零 ～红蝶～
+        - Crimson Butterfly
+        - FATAL FRAME II
+        - "FATAL FRAME II: Crimson Butterfly REMAKE"
+        - Mask of the Lunar Eclipse
+        - Maiden of Black Water
+      weight: 100
+    - name: Alan Wake
+      aliases:
+        - Alan Wake
+        - Alan Wake 2
+      weight: 90
+    - name: Alien Isolation
+      aliases:
+        - "Alien: Isolation"
+        - Alien Isolation
+      weight: 90
+    - name: Dead Space
+      aliases:
+        - Dead Space
+      weight: 90
+
+  tier_a:
+    - name: Amnesia
+      aliases:
+        - Amnesia
+        - "Amnesia: The Bunker"
+        - Frictional Games
+      weight: 75
+    - name: Outlast
+      aliases:
+        - Outlast
+        - The Outlast Trials
+        - Red Barrels
+      weight: 75
+    - name: SOMA
+      aliases:
+        - SOMA
+      weight: 70
+    - name: The Evil Within
+      aliases:
+        - The Evil Within
+        - Psychobreak
+      weight: 70
+    - name: Little Nightmares
+      aliases:
+        - Little Nightmares
+      weight: 70
+    - name: Dark Pictures
+      aliases:
+        - Until Dawn
+        - The Dark Pictures
+        - Directive 8020
+      weight: 65
+
+  tier_b:
+    - name: SIGNALIS
+      aliases:
+        - SIGNALIS
+      weight: 55
+    - name: Darkwood
+      aliases:
+        - Darkwood
+      weight: 55
+    - name: WORLD OF HORROR
+      aliases:
+        - WORLD OF HORROR
+        - World of Horror
+      weight: 55
+    - name: Detention
+      aliases:
+        - Detention
+        - 返校
+      weight: 50
+    - name: Visage
+      aliases:
+        - Visage
+      weight: 50
+    - name: MADiSON
+      aliases:
+        - MADiSON
+        - Madison
+      weight: 50
+    - name: The Mortuary Assistant
+      aliases:
+        - The Mortuary Assistant
+      weight: 50
+    - name: Mundaun
+      aliases:
+        - Mundaun
+      weight: 45
+    - name: Slay the Princess
+      aliases:
+        - Slay the Princess
+      weight: 45
+
+  coop_horror:
+    - name: Phasmophobia
+      aliases:
+        - Phasmophobia
+      weight: 45
+    - name: Lethal Company
+      aliases:
+        - Lethal Company
+      weight: 45
+    - name: Content Warning
+      aliases:
+        - Content Warning
+      weight: 40
+    - name: Dead by Daylight
+      aliases:
+        - Dead by Daylight
+      weight: 40
+
+  retro_psx_found_footage:
+    - name: P.T.-like Horror
+      aliases:
+        - P.T.
+        - PT-like
+        - P.T.-like
+        - teaser horror
+      weight: 55
+    - name: Puppet Combo
+      aliases:
+        - Puppet Combo
+        - Torture Star Video
+      weight: 55
+    - name: Chilla's Art
+      aliases:
+        - Chilla's Art
+        - Chillas Art
+        - Chilla
+      weight: 55
+    - name: Fears to Fathom
+      aliases:
+        - Fears to Fathom
+      weight: 50
+    - name: Backrooms
+      aliases:
+        - Backrooms
+        - found footage
+        - liminal horror
+      weight: 45
+
+  cosmic_horror:
+    - name: Call of Cthulhu
+      aliases:
+        - Call of Cthulhu
+        - Cthulhu
+        - Lovecraft
+        - cosmic horror
+      weight: 45
+    - name: SCP / Anomaly Horror
+      aliases:
+        - SCP
+        - anomaly
+        - anomalous
+        - abnormality
+      weight: 45
+
+  upcoming_watchlist:
+    - name: OD
+      aliases:
+        - OD
+        - Hideo Kojima OD
+      weight: 70
+    - name: ILL
+      aliases:
+        - ILL
+      weight: 65
+    - name: "Cronos: The New Dawn"
+      aliases:
+        - "Cronos: The New Dawn"
+        - Cronos The New Dawn
+      weight: 65
+    - name: Tormented Souls
+      aliases:
+        - Tormented Souls
+        - Tormented Souls 2
+      weight: 60
+    - name: Hollowbody
+      aliases:
+        - Hollowbody
+      weight: 55
+    - name: Routine
+      aliases:
+        - Routine
+      weight: 55
+    - name: No, I'm not a Human
+      aliases:
+        - No, I'm not a Human
+        - No Im not a Human
+      weight: 55
+    - name: Paranormasight
+      aliases:
+        - Paranormasight
+      weight: 55
+    - name: Ib
+      aliases:
+        - Ib
+      weight: 50
+    - name: Yomawari
+      aliases:
+        - Yomawari
+        - 夜廻
+      weight: 50
+    - name: Corpse Party
+      aliases:
+        - Corpse Party
+        - 尸体派对
+      weight: 50
+    - name: Ao Oni
+      aliases:
+        - Ao Oni
+        - 青鬼
+      weight: 45
