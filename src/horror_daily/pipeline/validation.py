@@ -7,22 +7,20 @@ from email.utils import parsedate_to_datetime
 from horror_daily.models import InfoType, NewsItem, ReportSection
 
 
-VALID_ACTIONS = {"现在买", "加愿望单", "等折扣", "等正式版", "暂时观望", "不建议碰"}
-
-
 def validate_report_items(items: list[NewsItem], config: dict) -> list[NewsItem]:
     keywords = config.get("keywords", {})
     min_reviews = int(config.get("runtime", {}).get("min_review_count_for_released", 200))
     for item in items:
         _normalize_titles(item, keywords)
         _fix_event_type(item)
-        _fix_addon_priority(item)
         _validate_relevance(item, keywords)
         _validate_prices(item)
-        _avoid_old_store_must_read(item)
+        _avoid_old_store_page(item)
         _apply_review_gate(item, min_reviews)
         _apply_event_gate(item)
         item.recommendation_action = _recommend_action(item)
+        item.risk_note = _fix_known_fact_errors(item.risk_note, item)
+        item.ai_summary = _fix_known_fact_errors(item.ai_summary, item)
         if not item.inclusion_reason:
             item.inclusion_reason = _inclusion_reason(item)
     return items
@@ -35,12 +33,18 @@ def _normalize_titles(item: NewsItem, keywords: dict) -> None:
         item.game_title = item.game_title or item.game_name or item.original_name
         item.game_title_confidence = max(item.game_title_confidence, 1)
     elif item.game_title_confidence < 0.6 or _looks_like_article_title(item.game_title):
-        _add_note(item, "游戏名未可靠识别，未把新闻标题当作游戏名。")
         item.game_title = ""
         item.game_name = ""
         item.original_name = ""
         item.section = ReportSection.RISKS.value
         item.score = min(item.score, 45)
+        _add_note(item, "游戏名未可靠识别，未把新闻标题当作游戏名。")
+
+    if "resident evil requiem" in item.text_blob():
+        item.series = "Resident Evil"
+        item.game_title = item.game_title or "Resident Evil Requiem"
+        item.game_title_confidence = max(item.game_title_confidence, 0.9)
+
     if not item.series:
         blob = item.text_blob()
         for series in keywords.get("tracked_series", []):
@@ -67,14 +71,14 @@ def _validate_relevance(item: NewsItem, keywords: dict) -> None:
         item.section = ReportSection.RISKS.value
         item.score = min(item.score, 30)
         item.excluded_from_readable = True
-        _add_note(item, "恐怖相关性不足，不能进入正式推荐区。")
+        _add_note(item, "恐怖相关性不足，仅保留在 debug。")
 
 
 def _validate_prices(item: NewsItem) -> None:
     valid = []
     for offer in item.price_offers:
         if offer.region.upper() != "CN" or offer.currency.upper() != "CNY":
-            _add_note(item, f"已隐藏非国区价格：{offer.store} {offer.currency} {offer.price}")
+            _add_note(item, f"已隐藏非国区价格：{offer.store}")
             continue
         if offer.price == 0 and offer.discount_percent < 100 and "free" not in offer.note.lower():
             _add_note(item, f"已隐藏需确认的 0 元价格：{offer.store}")
@@ -86,22 +90,14 @@ def _validate_prices(item: NewsItem) -> None:
     item.price_offers = valid
 
 
-def _avoid_old_store_must_read(item: NewsItem) -> None:
-    if item.source != "Steam Store":
-        return
-    if item.section == ReportSection.MUST_READ.value and item.info_type in {InfoType.DEMO, InfoType.UPCOMING, InfoType.EARLY_ACCESS}:
-        item.section = ReportSection.DEMOS.value if item.info_type == InfoType.DEMO else ReportSection.UPCOMING.value
-        _add_note(item, "Steam 商店页不是近期新闻事件，已移出今日必看。")
-        return
-    if item.info_type != InfoType.RELEASE:
+def _avoid_old_store_page(item: NewsItem) -> None:
+    if item.source != "Steam Store" or item.info_type != InfoType.RELEASE:
         return
     release_date = _parse_release_date(str(item.raw.get("release_date", "")) if isinstance(item.raw, dict) else "")
     if release_date and (datetime.now(timezone.utc) - release_date).days > 30:
         item.excluded_from_readable = True
         item.inclusion_reason = "excluded: old Steam store page without recent event"
-        _add_note(item, "旧游戏商店页没有近期事件，不因优先级命中进入日报。")
-        if item.section == ReportSection.MUST_READ.value:
-            item.section = ReportSection.WATCHLIST.value
+        _add_note(item, "旧商店页没有近期事件，不进入 readable。")
 
 
 def _apply_review_gate(item: NewsItem, min_reviews: int) -> None:
@@ -109,30 +105,22 @@ def _apply_review_gate(item: NewsItem, min_reviews: int) -> None:
     if review_count is None and isinstance(item.raw, dict):
         review_count = _as_int(item.raw.get("review_count"))
         item.review_count = review_count
-
     if not _is_released_steam_store_game(item):
         item.review_gate_result = _review_exemption_reason(item)
         return
-
     if review_count is None:
-        item.review_gate_result = f"blocked: Steam 已发售正式游戏缺少评测人数，门槛为 {min_reviews}"
+        item.review_gate_result = f"blocked: missing review_count, threshold {min_reviews}"
         item.excluded_from_readable = True
-        _add_note(item, f"已发售 Steam 商店游戏缺少评测人数，未进入正式日报；门槛 {min_reviews}。")
         return
-
     if review_count < min_reviews:
         item.review_gate_result = f"blocked: review_count {review_count} < {min_reviews}"
         item.excluded_from_readable = True
-        _add_note(item, f"Steam 评测人数 {review_count}，低于正式日报门槛 {min_reviews}。")
         return
-
     item.review_gate_result = f"passed: review_count {review_count} >= {min_reviews}"
 
 
 def _apply_event_gate(item: NewsItem) -> None:
-    if item.excluded_from_readable:
-        return
-    if item.source != "Steam Store":
+    if item.excluded_from_readable or item.source != "Steam Store":
         return
     if item.info_type in {InfoType.DISCOUNT, InfoType.UPCOMING, InfoType.DEMO, InfoType.EARLY_ACCESS, InfoType.DLC}:
         return
@@ -140,16 +128,7 @@ def _apply_event_gate(item: NewsItem) -> None:
     if release_date and abs((datetime.now(timezone.utc) - release_date).days) <= 30:
         return
     item.excluded_from_readable = True
-    item.inclusion_reason = "excluded: Steam store result has no recent actionable event"
-    _add_note(item, "商店搜索结果没有近期发售、折扣、Demo、更新或发售日事件，已仅保留在 debug。")
-
-
-def _fix_addon_priority(item: NewsItem) -> None:
-    title = f"{item.title} {item.game_title}".lower()
-    addon_terms = ["upgrade", "digital deluxe", "costume", "dlc", "服装", "升级包", "deluxe upgrade"]
-    if any(term in title for term in addon_terms) and item.section == ReportSection.MUST_READ.value:
-        item.section = ReportSection.DISCOUNTS.value if item.price_offers else ReportSection.WATCHLIST.value
-        _add_note(item, "附加内容/升级包不进入今日必看，保留为价格或关注信息。")
+    item.inclusion_reason = "excluded: no recent actionable Steam event"
 
 
 def _recommend_action(item: NewsItem) -> str:
@@ -168,8 +147,6 @@ def _recommend_action(item: NewsItem) -> str:
         return "现在买" if best_discount >= 50 else "等折扣"
     if item.info_type == InfoType.RELEASE:
         return "加愿望单" if not item.price_offers else "等折扣"
-    if item.info_type in {InfoType.UPDATE, InfoType.DLC, InfoType.REVIEW_TREND, InfoType.NEWS}:
-        return "暂时观望"
     return "暂时观望"
 
 
@@ -179,20 +156,20 @@ def _inclusion_reason(item: NewsItem) -> str:
     if item.info_type == InfoType.DISCOUNT:
         return "included: discount or price change"
     if item.info_type == InfoType.UPCOMING:
-        return "included: upcoming or release-date information"
+        return "included: upcoming information"
     if item.info_type == InfoType.DEMO:
-        return "included: demo or playtest information"
+        return "included: demo information"
     if item.source != "Steam Store":
         return "included: authoritative news/feed item"
-    return "included: recent actionable Steam store item"
+    return "included: recent Steam item"
 
 
 def _review_exemption_reason(item: NewsItem) -> str:
     if _is_future_release(item):
         return "exempt: unreleased item"
     if item.info_type in {InfoType.UPCOMING, InfoType.DEMO, InfoType.EARLY_ACCESS, InfoType.DLC}:
-        return "exempt: unreleased/demo/early-access/DLC item"
-    if item.source in {"Steam News"}:
+        return "exempt: demo/upcoming/DLC item"
+    if item.source == "Steam News":
         return "exempt: Steam News event"
     if item.priority_tier == "tier_s" and item.source != "Steam Store":
         return "exempt: S-tier authoritative news"
@@ -204,17 +181,7 @@ def _is_released_steam_store_game(item: NewsItem) -> bool:
         return False
     if item.info_type in {InfoType.UPCOMING, InfoType.DEMO, InfoType.EARLY_ACCESS, InfoType.DLC}:
         return False
-    if _is_future_release(item):
-        return False
-    return item.info_type in {InfoType.RELEASE, InfoType.DISCOUNT}
-
-
-def _looks_like_article_title(value: str) -> bool:
-    if not value:
-        return True
-    words = value.split()
-    bad_words = {"announced", "revealed", "reportedly", "confirms", "everything", "during", "why", "will", "joins"}
-    return len(words) > 8 or any(word.lower().strip(",:") in bad_words for word in words)
+    return not _is_future_release(item) and item.info_type in {InfoType.RELEASE, InfoType.DISCOUNT}
 
 
 def _parse_release_date(value: str) -> datetime | None:
@@ -236,11 +203,6 @@ def _parse_release_date(value: str) -> datetime | None:
         return None
 
 
-def _is_search_url(url: str) -> bool:
-    lower = url.lower()
-    return "search?" in lower or "/search" in lower
-
-
 def _is_future_release(item: NewsItem) -> bool:
     if not isinstance(item.raw, dict):
         return False
@@ -248,13 +210,34 @@ def _is_future_release(item: NewsItem) -> bool:
     return bool(release_date and release_date > datetime.now(timezone.utc))
 
 
+def _fix_known_fact_errors(text: str, item: NewsItem) -> str:
+    if not text:
+        return text
+    if "resident evil requiem" in item.text_blob():
+        text = re.sub(r"非\s*Capcom|非CAPCOM|非官方|蹭名|山寨", "CAPCOM 官方", text, flags=re.I)
+    if not _is_future_release(item):
+        text = text.replace("游戏尚未发售，", "")
+        text = text.replace("尚未发售，", "")
+        text = text.replace("未发售，", "")
+    return text
+
+
+def _looks_like_article_title(value: str) -> bool:
+    if not value:
+        return True
+    words = value.split()
+    bad_words = {"announced", "revealed", "reportedly", "confirms", "everything", "during", "why", "will", "joins"}
+    return len(words) > 8 or any(word.lower().strip(",:") in bad_words for word in words)
+
+
+def _is_search_url(url: str) -> bool:
+    lower = url.lower()
+    return "search?" in lower or "/search" in lower
+
+
 def _steam_discount(item: NewsItem) -> int:
-    if not isinstance(item.raw, dict):
-        return 0
-    price = item.raw.get("price") or {}
-    if isinstance(price, dict):
-        return int(price.get("discount_percent") or 0)
-    return 0
+    price = item.raw.get("price") if isinstance(item.raw, dict) else {}
+    return int(price.get("discount_percent") or 0) if isinstance(price, dict) else 0
 
 
 def _as_int(value) -> int | None:

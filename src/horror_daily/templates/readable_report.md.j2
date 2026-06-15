@@ -1,7 +1,11 @@
 # PC 恐怖游戏日报 - {{ report_date }}
 
+## 今日概况
+
+{{ daily_overview }}
+
 {% if item_count == 0 %}
-今天没有抓取到值得进入正式日报的高可信情报。系统仍完成了来源检查；失败来源见文末。
+今天没有抓取到值得进入正式日报的高可信情报。
 {% endif %}
 
 {% for section in sections %}
@@ -47,18 +51,10 @@
 {% endif %}
 {% endfor %}
 
-## 数据来源与可信度说明
-
-本日报优先使用 Steam 官方商店、Steam News、官方开发商/发行商信息与权威媒体 RSS。正文只展示阅读决策需要的信息；完整字段、评分、原始抓取结果与校验理由请查看 `debug_report.md` 或 `debug.json`。
-
-价格只展示中国区价格。没有明确 CN/CNY 价格时显示“国区价格未获取”，不会回退到美元或其他外区价格。CD key 搜索页不会进入正式日报；只有明确商品页、价格、DRM 和区域限制的授权零售商报价才允许展示。
-
 {% if failures %}
-### 本次抓取失败来源
+## 本次抓取失败来源
 
 {% for failure in failures %}
 - {{ failure.source }}：{{ failure.error }}
 {% endfor %}
-{% else %}
-本次未记录来源抓取失败。
 {% endif %}

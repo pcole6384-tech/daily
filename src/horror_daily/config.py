@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 from dotenv import load_dotenv
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,6 +34,21 @@ class Settings(BaseSettings):
     config_path: Path = Field(default=Path("config/settings.yaml"))
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @field_validator("smtp_port", mode="before")
+    @classmethod
+    def _blank_smtp_port_uses_default(cls, value):
+        return 587 if value == "" or value is None else value
+
+    @field_validator("smtp_use_ssl", mode="before")
+    @classmethod
+    def _blank_smtp_ssl_uses_default(cls, value):
+        return False if value == "" or value is None else value
+
+    @field_validator("smtp_use_tls", mode="before")
+    @classmethod
+    def _blank_smtp_tls_uses_default(cls, value):
+        return True if value == "" or value is None else value
 
 
 @lru_cache(maxsize=1)

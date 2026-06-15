@@ -23,7 +23,7 @@ def test_report_renderer_writes_readable_and_debug_outputs(tmp_path):
         score=80,
         section=ReportSection.MUST_READ.value,
         raw={"appid": 1, "review_count": 200},
-        ai_summary="测试摘要",
+        ai_summary="<p>测试摘要</p>",
         recommendation_reason="测试理由",
         preference_match="恐怖题材",
         risk_note="暂无明显风险",
@@ -57,6 +57,7 @@ def test_report_renderer_writes_readable_and_debug_outputs(tmp_path):
     assert "英文原名" not in md
     assert "综合评分" not in md
     assert "测试摘要" in html
+    assert "<p>测试摘要</p>" not in md
     assert "Hidden Horror" not in md
 
     debug = json.loads((tmp_path / "debug.json").read_text(encoding="utf-8"))

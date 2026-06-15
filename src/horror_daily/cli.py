@@ -78,13 +78,13 @@ def main(argv: list[str] | None = None) -> None:
         db.save_failures(price_failures)
         report_items = validate_report_items(report_items, config)
 
+        report_date = datetime.now(_timezone(settings.tz)).date()
         summarizer = DeepSeekSummarizer(settings)
-        enriched = summarizer.enrich(report_items, failures)
+        enriched = summarizer.enrich(report_items, failures, report_date)
         enriched = validate_report_items(enriched, config)
 
-        report_date = datetime.now(_timezone(settings.tz)).date()
         renderer = ReportRenderer(settings.report_dir, config)
-        markdown_path, html_path, _, html = renderer.render(report_date, enriched, failures)
+        markdown_path, html_path, _, html = renderer.render(report_date, enriched, failures, summarizer.daily_overview)
 
         subject = f"PC恐怖游戏日报 - {report_date.isoformat()}"
         sent = False if args.no_email else mailer.send_report(subject, html, markdown_path, dry_run=args.dry_run)

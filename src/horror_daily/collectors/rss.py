@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import logging
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -55,15 +56,14 @@ class RssCollector:
         return do_fetch()
 
     def _collect_source(self, client: httpx.Client, source: dict) -> list[NewsItem]:
-        content = self._fetch(client, source["url"])
-        feed = feedparser.parse(content)
+        feed = feedparser.parse(self._fetch(client, source["url"]))
         cutoff = datetime.now(timezone.utc) - timedelta(days=self.days_back)
         items: list[NewsItem] = []
         for entry in feed.entries[: self.max_items]:
             published = self._entry_date(entry)
             if published < cutoff:
                 continue
-            title = entry.get("title", "").strip()
+            title = self._clean(entry.get("title", ""))
             summary = self._clean(entry.get("summary", "") or entry.get("description", ""))
             text = f"{title} {summary}".lower()
             if not self._is_relevant(text):
@@ -117,50 +117,23 @@ class RssCollector:
         return InfoType.NEWS
 
     def _guess_game_name(self, title: str) -> tuple[str, float]:
-        quoted_patterns = [
-            r"['\"“”‘’『』「」]([^'\"“”‘’『』「」]{2,80})['\"“”‘’『』「」]",
-            r"《([^》]{2,80})》",
-        ]
-        for pattern in quoted_patterns:
+        known = self._known_title_from_keywords(title)
+        if known:
+            return known, 0.75
+        for pattern in (r"['\"“”‘’『』「」]([^'\"“”‘’『』「」]{2,80})['\"“”‘’『』「」]", r"《([^》]{2,80})》"):
             match = re.search(pattern, title)
             if match:
                 candidate = self._clean_candidate(match.group(1))
                 if candidate:
                     return candidate, 0.8
-
-        known = self._known_title_from_keywords(title)
-        if known:
-            return known, 0.75
-
-        conservative_patterns = [
-            r"^([A-Z][A-Za-z0-9:'.!,& -]{2,70})\s+(?:gets|adds|reveals|launches|confirms|announces|will)\b",
-            r"\b(?:for|of|in)\s+([A-Z][A-Za-z0-9:'.!,& -]{2,60})(?:\s+gets|\s+adds|\s+reveals|\s+launches|\s+confirms|\s+demo|\s+trailer|\s+update|$)",
-        ]
-        for pattern in conservative_patterns:
-            match = re.search(pattern, title)
-            if match:
-                candidate = self._clean_candidate(match.group(1))
-                if candidate:
-                    return candidate, 0.65
         return "", 0
 
     def _known_title_from_keywords(self, title: str) -> str:
         lower = title.lower()
-        candidates = sorted(
-            set(self.config.get("keywords", {}).get("tracked_series", [])),
-            key=lambda value: len(value),
-            reverse=True,
-        )
-        for series in candidates:
+        for series in sorted(set(self.config.get("keywords", {}).get("tracked_series", [])), key=len, reverse=True):
             if series.lower() in lower:
                 return series
         return ""
-
-    def _clean_candidate(self, value: str) -> str:
-        candidate = value.strip(" -:|")
-        if not candidate or self._looks_like_sentence(candidate):
-            return ""
-        return candidate[:120]
 
     def _guess_series(self, text: str) -> str:
         for series in self.config.get("keywords", {}).get("tracked_series", []):
@@ -168,10 +141,15 @@ class RssCollector:
                 return series
         return ""
 
-    def _looks_like_sentence(self, value: str) -> bool:
-        words = value.split()
-        sentence_words = {"announced", "revealed", "reportedly", "confirms", "everything", "during", "will", "why"}
-        return len(words) > 8 or any(word.lower().strip(",:") in sentence_words for word in words)
+    def _clean_candidate(self, value: str) -> str:
+        candidate = value.strip(" -:|")
+        if len(candidate.split()) > 8:
+            return ""
+        return candidate[:120]
 
     def _clean(self, value: str) -> str:
+        value = html.unescape(str(value or ""))
+        value = re.sub(r"<(script|style).*?</\1>", " ", value, flags=re.I | re.S)
+        value = re.sub(r"<[^>]+>", " ", value)
+        value = re.sub(r"https?://\S+", " ", value)
         return " ".join(value.replace("\n", " ").split())
